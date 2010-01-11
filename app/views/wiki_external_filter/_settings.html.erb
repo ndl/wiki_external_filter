@@ -1,0 +1,21 @@
+<fieldset>
+  <legend>Caching Settings</legend>
+  <p>
+    <label>Cache expiration time</label><%= text_field_tag 'settings[cache_seconds]', @settings['cache_seconds'] %> seconds
+  </p>
+  <p>
+    Enter zero to disable caching. Make sure to configure fragment_cache_store if you use the value &gt; 0.
+  </p>
+  <p>
+    Configuration example for ActiveSupport::Cache::FileStore,  config/environments/production.rb file:<br/>
+    <br/>
+    ...<br/>
+    config.action_controller.fragment_cache_store = :file_store, &quot;#{RAILS_ROOT}/cache&quot;<br/>
+    ...
+  </p>
+  <p>
+    Current cache settings are:<br/>
+      ActionController::Base.cache_configured? = <%= h ActionController::Base.cache_configured? ? "true" : "false" %><br/>
+      ActionController::Base.fragment_cache_store = <%= h ActionController::Base.fragment_cache_store.inspect %>
+  </p>
+</fieldset>

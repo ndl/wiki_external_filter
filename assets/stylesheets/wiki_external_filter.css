@@ -1,0 +1,18 @@
+.externalfilterinline{
+  position: relative;
+  bottom: -0.2em;
+}
+
+.externalfilterblock img{
+	display: block;
+}
+
+.externalfilterblock .wiki_page{
+	font-size: 80%;
+	border-top: 1px solid #ccc;
+	color: #aaa;
+}
+
+.externalfilterblock .wiki_page a{
+	color: #999;
+}

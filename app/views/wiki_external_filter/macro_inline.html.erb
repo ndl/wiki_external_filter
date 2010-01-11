@@ -1,0 +1,25 @@
+<%
+  case content_type
+    when /image\// then
+%>
+      <img class='externalfilterinline' src='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name) %>' alt="<%= h source %>" />
+<%
+    when /text\/plain/ then
+%>
+      <pre class='externalfilterinline'><%= h content %></pre>
+<%
+    when /\/.*(x|ht)ml/ then
+%>
+      <div class='externalfilterinline'><%= content %></div>
+<%
+    else
+%>
+      <object class='externalfilterinline' name='<%= name %>' data='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name) %>' type='<%= content_type %>' title="<%= h source %>">
+        <embed name='<%= name %>-2' src='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name) %>' type='<%= content_type %>' title="<%= h source %>" />
+      </object>
+<%
+  end
+%>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag "wiki_external_filter.css", :plugin => "wiki_external_filter", :media => :all %>
+<% end %>
