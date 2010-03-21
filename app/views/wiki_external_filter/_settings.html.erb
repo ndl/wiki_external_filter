@@ -4,18 +4,22 @@
     <label>Cache expiration time</label><%= text_field_tag 'settings[cache_seconds]', @settings['cache_seconds'] %> seconds
   </p>
   <p>
-    Enter zero to disable caching. Make sure to configure fragment_cache_store if you use the value &gt; 0.
+    Enter zero to disable caching. Make sure to configure cache_store if you use the value &gt; 0.
   </p>
   <p>
-    Configuration example for ActiveSupport::Cache::FileStore,  config/environments/production.rb file:<br/>
+    Configuration example for ActiveSupport::Cache::FileStore, config/environments/production.rb file:<br/>
     <br/>
     ...<br/>
-    config.action_controller.fragment_cache_store = :file_store, &quot;#{RAILS_ROOT}/cache&quot;<br/>
+    config.action_controller.cache_store = :file_store, &quot;#{RAILS_ROOT}/cache&quot;<br/>
     ...
+  </p>
+  <p>
+  Note: use 'fragment_cache_store' instead of 'cache_store' for Redmine 0.8.x.
   </p>
   <p>
     Current cache settings are:<br/>
       ActionController::Base.cache_configured? = <%= h ActionController::Base.cache_configured? ? "true" : "false" %><br/>
-      ActionController::Base.fragment_cache_store = <%= h ActionController::Base.fragment_cache_store.inspect %>
+      <% cache_store = ActionController::Base.respond_to?('fragment_cache_store=') ? ActionController::Base.fragment_cache_store : ActionController::Base.cache_store %>
+      ActionController::Base.cache_store = <%= h cache_store.inspect %>
   </p>
 </fieldset>
