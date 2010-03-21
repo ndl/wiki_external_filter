@@ -11,7 +11,7 @@ development: &development
     content_type: "image/svg+xml"
   ritex:
     description: "Converts WebTeX expression to MathML, see http://ritex.rubyforge.org/"
-    command: "(echo '<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\" \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">'; /usr/bin/ritex) | xmllint --noent --nonet --catalogs --loaddtd - | /usr/bin/math2svg"
+    command: "(echo '<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\" \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">'; /usr/bin/ritex) | xmllint --noent --nonet --catalogs --loaddtd - | sed 's/^<!DOCTYPE.\\+$//' | /usr/bin/math2svg"
     content_type: "image/svg+xml"
 # For MathML-compliant browsers and when Redmine is fully XML-compliant.
 #  ritex:
