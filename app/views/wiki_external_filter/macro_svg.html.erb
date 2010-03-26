@@ -1,0 +1,27 @@
+<img class='svg <%= render_type == 'inline' ? "externalfilterinline" : "" %>' src='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name, :index => 0) %>' alt='<%= h source %>' />
+<object class='svgobject <%= render_type == 'inline' ? "externalfilterinline" : "" %>' name='<%= name %>' data='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name, :index => 0) %>' type='<%= content_types[0] %>' title="<%= h source %>">
+<%
+  if content.size > 1
+%>
+    <img<%= render_type == 'inline' ? " class='externalfilterinline'" : "" %> src='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name, :index => 1) %>' alt='<%= h source %>' />
+<%
+  end
+%>
+</object>
+<%
+  content_for :header_tags do
+    if not @svg_scripts_included
+      @svg_scripts_included = true
+%>
+      <%= javascript_include_tag 'css_browser_selector.js', :plugin => 'wiki_external_filter' %>
+      <style type="text/css">
+        .svgobject { display: none }
+        .ie .svgobject { display: inline }
+        .ie img.svg { display: none }
+        .gecko .svgobject { display: inline }
+        .gecko img.svg { display: none }
+      </style>
+<%
+    end
+  end
+%>

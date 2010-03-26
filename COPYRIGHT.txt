@@ -2,8 +2,13 @@ Redmine Wiki External Filter plugin that allows to filter macro blocks
 arguments using external program and display results on wiki.
  
 Copyright (C) 2010 Alexander Tsvyashchenko, http://www.ndl.kiev.ua
-Based on wiki_latex_plugin by Nils Israel <info@nils-israel.net>
-Based on wiki_graphviz_plugin by tckz <at.tckz@gmail.com>
+
+* Based on wiki_latex_plugin by Nils Israel <info@nils-israel.net>
+* Based on wiki_graphviz_plugin by tckz <at.tckz@gmail.com>
+* Includes FlowPlayer flash player, see http://www.flowplayer.org
+* Includes CSS Browser Selector, see http://rafael.adm.br/css_browser_selector/
+* Thanks to Eike for his "Cross-Browser SVG Issues" article,
+  http://e.metaclarity.org/52/cross-browser-svg-issues/
  
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

@@ -47,7 +47,6 @@ module WikiExternalFilterHelper
     if content
       result[:source] = text
       result[:content] = content
-      result[:content_type] = info['content_type']
       RAILS_DEFAULT_LOGGER.debug "from cache: #{name}"
     else
       result = self.build_forced(text, attachments, info)
@@ -63,6 +62,8 @@ module WikiExternalFilterHelper
 
     result[:name] = name
     result[:macro] = macro
+    result[:content_types] = info['outputs'].map { |out| out['content_type'] }
+    result[:template] = info['template']
 
     return result
   end
@@ -79,18 +80,16 @@ module WikiExternalFilterHelper
     content = []
     errors = ""
 
-    commands = info['commands']? info['commands'] : [info['command']]
-
-    commands.each do |command|
-      RAILS_DEFAULT_LOGGER.info "executing command: #{command}"
+    info['outputs'].each do |out|
+      RAILS_DEFAULT_LOGGER.info "executing command: #{out['command']}"
 
       c = nil
       e = nil
 
-      Open4::popen4(command) { |pid, fin, fout, ferr|
-        fin.write info[:prolog] if info.key?(:prolog)
+      Open4::popen4(out['command']) { |pid, fin, fout, ferr|
+        fin.write out['prolog'] if out.key?('prolog')
         fin.write CGI.unescapeHTML(text)
-        fin.write info[:epilog] if info.key?(:epilog)
+        fin.write out['epilog'] if out.key?('epilog')
         fin.close
         c, e = [fout.read, ferr.read]
       }
@@ -103,7 +102,6 @@ module WikiExternalFilterHelper
 
     result[:content] = content
     result[:errors] = errors
-    result[:content_type] = info['content_type']
     result[:source] = text
     result[:status] = $?.exitstatus == 0
 
@@ -111,21 +109,35 @@ module WikiExternalFilterHelper
   end
 
   def render_tag(result)
-    render_to_string :template => 'wiki_external_filter/macro_inline', :layout => false, :locals => result
+    result = result.dup
+    result[:render_type] = 'inline'
+    html = render_common(result).chop
+    html << headers_common(result).chop
+    html
   end
 
   def render_block(result, wiki_name)
     result = result.dup
+    result[:render_type] = 'block'
     result[:wiki_name] = wiki_name
-    render_to_string :template => 'wiki_external_filter/macro_block', :layout => false, :locals => result
+    result[:inside] = render_common(result)
+    html = render_to_string(:template => 'wiki_external_filter/block', :layout => false, :locals => result).chop
+    html << headers_common(result).chop
+    html
+  end
+
+  def render_common(result)
+    render_to_string :template => "wiki_external_filter/macro_#{result[:template]}", :layout => false, :locals => result
+  end
+
+  def headers_common(result)
+    render_to_string :template => 'wiki_external_filter/headers', :layout => false, :locals => result
   end
 
   class Macro
     def initialize(view, source, attachments, macro, info)
       @view = view
       @view.controller.extend(WikiExternalFilterHelper)
-      source.gsub!(/<br \/>/, "")
-      source.gsub!(/<\/?p>/, "")
       @result = @view.controller.build(source, attachments, macro, info)
     end
 

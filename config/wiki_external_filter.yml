@@ -1,28 +1,54 @@
 development: &development
   plantuml:
     description: "Constructs UML diagram image from its textual description in PlantUML language, see http://plantuml.sourceforge.net"
-    command: "/usr/bin/plantuml -pipe"
-    content_type: "image/png"
-    prolog: "@startuml"
-    epilog: "@enduml"
+    template: image
+    outputs:
+      - command: "/usr/bin/plantuml -pipe"
+        content_type: "image/png"
+        prolog: "@startuml"
+        epilog: "@enduml"
   graphviz:
     description: "Constructs graph image from its textual description in DOT language, see http://www.graphviz.org"
-    command: "/usr/bin/dot -Tsvg"
-    content_type: "image/svg+xml"
+    template: svg
+    outputs:
+      - command: "/usr/bin/dot -Tsvg"
+        content_type: "image/svg+xml"
+      - command: "/usr/bin/dot -Tpng"
+        content_type: "image/png"
   ritex:
     description: "Converts WebTeX expression to MathML, see http://ritex.rubyforge.org/"
-    command: "(echo '<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\" \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">'; /usr/bin/ritex) | xmllint --noent --nonet --catalogs --loaddtd - | sed 's/^<!DOCTYPE.\\+$//' | /usr/bin/math2svg"
-    content_type: "image/svg+xml"
-# For MathML-compliant browsers and when Redmine is fully XML-compliant.
-#  ritex:
-#    description: "Converts WebTeX expression to MathML, see http://ritex.rubyforge.org/"
-#    command: "/usr/bin/ritex"
-#    content_type: "application/xhtml+xml"
+    template: svg
+    outputs:
+      - command: "(echo '<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\" \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">'; /usr/bin/ritex) | xmllint --noent --nonet --catalogs --loaddtd - | sed 's/^<!DOCTYPE.\\+$//' | /usr/bin/math2svg"
+        content_type: "image/svg+xml"
+  video:
+    description: "Converts video file given by its filename to FLV and displays it via Flowplayer"
+    template: flash-video
+    replace_attachments: true
+    outputs:
+      - command: "xargs -I{} ffmpeg -i {} -vframes 1 -f mjpeg -"
+        content_type: "image/jpeg"
+        # We have to use temporary file as otherwise ffmpeg is unable to inject
+        # metadata.
+      - command: "FN=`cat`; if [ `echo ${FN##*.} | tr [:upper:] [:lower:]` != 'flv' ]; then TMPVIDEO=`tempfile --directory=/var/tmp`; ffmpeg -y -i $FN -sameq -ar 44100 -f flv $TMPVIDEO; STATUS=$?; cat $TMPVIDEO; rm $TMPVIDEO; exit $STATUS; else cat $FN; fi"
+        content_type: "video/x-flv"
+  video_url:
+    description: "Converts video file given by its URL to FLV and displays it via Flowplayer"
+    template: flash-video
+    outputs:
+      - command: "wget -i - -O - | ffmpeg -i - -vframes 1 -f mjpeg -"
+        content_type: "image/jpeg"
+        # We have to use temporary file as otherwise ffmpeg is unable to inject
+        # metadata.
+      - command: "FN=`cat`; wget $FN -O - | (if [ `echo ${FN##*.} | tr [:upper:] [:lower:]` != 'flv' ]; then TMPVIDEO=`tempfile --directory=/var/tmp`; ffmpeg -y -i - -sameq -ar 44100 -f flv $TMPVIDEO; STATUS=$?; cat $TMPVIDEO; rm $TMPVIDEO; exit $STATUS; else cat; fi)"
+        content_type: "video/x-flv"
   fortune:
     description: "Prints a random, hopefully interesting, adage, see http://en.wikipedia.org/wiki/Fortune_(Unix)"
-    command: "/usr/bin/fortune"
+    template: text
     cache_seconds: 0
-    content_type: "text/plain"
+    outputs:
+      - command: "/usr/bin/fortune"
+        content_type: "text/plain"
 
 test:
   type: mock

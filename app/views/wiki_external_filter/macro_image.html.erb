@@ -1,0 +1,1 @@
+<img <%= render_type == 'inline' ? "class='externalfilterinline'" : "" %> src='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name, :index => 0) %>' alt="<%= h source %>" />

@@ -1,0 +1,10 @@
+<%
+  content_for :header_tags do
+    if not @stylesheets_included
+      @stylesheets_included = true
+%>
+      <%= stylesheet_link_tag "wiki_external_filter.css", :plugin => "wiki_external_filter", :media => :all %>
+<%
+    end
+  end
+%>

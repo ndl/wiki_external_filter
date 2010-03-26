@@ -19,7 +19,7 @@ Redmine::Plugin.register :wiki_external_filter do
       info = config[name]
       desc info['description']
       macro name do |obj, args|
-        m = WikiExternalFilterHelper::Macro.new(self, args.to_s, obj.page.attachments, name, info)
+        m = WikiExternalFilterHelper::Macro.new(self, args.to_s, obj ? obj.page.attachments : nil, name, info)
 	m.render
       end
 
