@@ -18,8 +18,8 @@ Redmine::Plugin.register :wiki_external_filter do
     Redmine::WikiFormatting::Macros.register do
       info = config[name]
       desc info['description']
-      macro name do |wiki_content_obj, args|
-        m = WikiExternalFilterHelper::Macro.new(self, args.to_s, name, info)
+      macro name do |obj, args|
+        m = WikiExternalFilterHelper::Macro.new(self, args.to_s, obj.page.attachments, name, info)
 	m.render
       end
 
@@ -33,7 +33,7 @@ Redmine::Plugin.register :wiki_external_filter do
         @included_wiki_pages ||= []
         raise 'Circular inclusion detected' if @included_wiki_pages.include?(page.title)
         @included_wiki_pages << page.title
-        m = WikiExternalFilterHelper::Macro.new(self, page.content.text, name, info)
+        m = WikiExternalFilterHelper::Macro.new(self, page.content.text, page.attachments, name, info)
         @included_wiki_pages.pop
         m.render_block(args.to_s)
       end

@@ -1,4 +1,5 @@
 require 'digest/sha2'
+require 'open4'
 
 module WikiExternalFilterHelper
 
@@ -24,7 +25,7 @@ module WikiExternalFilterHelper
     ['wiki_external_filter', macro, name].join("/")
   end
 
-  def build(text, macro, info)
+  def build(text, attachments, macro, info)
 
     name = Digest::SHA256.hexdigest(text)
     result = {}
@@ -49,14 +50,14 @@ module WikiExternalFilterHelper
       result[:content_type] = info['content_type']
       RAILS_DEFAULT_LOGGER.debug "from cache: #{name}"
     else
-      result = self.build_forced(text, info)
+      result = self.build_forced(text, attachments, info)
       if result[:status]
         if expires > 0
           write_fragment cache_key, result[:content], :expires_in => expires.seconds
 	  RAILS_DEFAULT_LOGGER.debug "cache saved: #{name}"
 	end
       else
-        raise "Error applying external filter: #{result[:content]}"
+        raise "Error applying external filter: stdout is #{result[:content]}, stderr is #{result[:errors]}"
       end
     end
 
@@ -66,23 +67,42 @@ module WikiExternalFilterHelper
     return result
   end
 
-  def build_forced(text, info)
+  def build_forced(text, attachments, info)
+
+    if info['replace_attachments'] and attachments
+      attachments.each do |att|
+        text.gsub!(/#{att.filename.downcase}/i, att.diskfile)
+      end
+    end
 
     result = {}
+    content = []
+    errors = ""
 
-    RAILS_DEFAULT_LOGGER.debug "executing command: #{info['command']}"
+    commands = info['commands']? info['commands'] : [info['command']]
 
-    content = IO.popen(info['command'], 'r+b') { |f|
-      f.write info[:prolog] if info.key?(:prolog)
-      f.write CGI.unescapeHTML(text)
-      f.write info[:epilog] if info.key?(:epilog)
-      f.close_write
-      f.read
-    }
+    commands.each do |command|
+      RAILS_DEFAULT_LOGGER.info "executing command: #{command}"
 
-    RAILS_DEFAULT_LOGGER.info("child status: sig=#{$?.termsig}, exit=#{$?.exitstatus}")
+      c = nil
+      e = nil
+
+      Open4::popen4(command) { |pid, fin, fout, ferr|
+        fin.write info[:prolog] if info.key?(:prolog)
+        fin.write CGI.unescapeHTML(text)
+        fin.write info[:epilog] if info.key?(:epilog)
+        fin.close
+        c, e = [fout.read, ferr.read]
+      }
+
+      RAILS_DEFAULT_LOGGER.debug("child status: sig=#{$?.termsig}, exit=#{$?.exitstatus}")
+
+      content << c
+      errors += e if e
+    end
 
     result[:content] = content
+    result[:errors] = errors
     result[:content_type] = info['content_type']
     result[:source] = text
     result[:status] = $?.exitstatus == 0
@@ -101,12 +121,12 @@ module WikiExternalFilterHelper
   end
 
   class Macro
-    def initialize(view, source, macro, info)
+    def initialize(view, source, attachments, macro, info)
       @view = view
       @view.controller.extend(WikiExternalFilterHelper)
       source.gsub!(/<br \/>/, "")
       source.gsub!(/<\/?p>/, "")
-      @result = @view.controller.build(source, macro, info)
+      @result = @view.controller.build(source, attachments, macro, info)
     end
 
     def render()

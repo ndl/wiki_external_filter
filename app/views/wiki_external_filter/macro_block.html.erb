@@ -13,6 +13,15 @@
 %>
         <div><%= content %></div>
 <%
+      when /video\/x\-flv/ then
+        require 'RMagick'
+	image = Magick::Image::from_blob(content[0]).first
+%>
+	<a class='flowplayer-video' href='<%= ActionController::Base.relative_url_root + "/wiki_external_filter/video.flv?name=#{name}" %>' alt='<%= h source %>' style='display:block;width:<%= image.columns %>px;height:<%= image.rows + 24 %>px;background-image:url(<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name, :index => 0) %>);background-repeat:no-repeat'><%= image_tag 'play_large.png', :plugin => 'wiki_external_filter', :style => "display:block;position:relative;left:#{image.columns / 2 - 83 / 2}px;top:#{image.rows / 2 - 83 / 2}px" %></a>
+<%
+	@flowplayer_used = true
+%>
+<%
       else
 %>
         <object class='externalfilterinline' name='<%= name %>' data='<%= url_for(:controller => 'wiki_external_filter', :action => 'filter', :macro => macro, :name => name) %>' type='<%= content_type %>' title="<%= h source %>">
@@ -24,6 +33,32 @@
   <br/>
   <span class='wiki_page'>Goto source: [[<%= wiki_name %>]]</span>
 </div>
-<% content_for :header_tags do %>
-   <%= stylesheet_link_tag "wiki_external_filter.css", :plugin => "wiki_external_filter", :media => :all %>
-<% end %>
+<%
+  content_for :header_tags do
+%>
+<%
+    if not @stylesheets_included
+      @stylesheets_included = true
+%>
+      <%= stylesheet_link_tag "wiki_external_filter.css", :plugin => "wiki_external_filter", :media => :all %>
+<%
+    end
+%>
+<%
+    if @flowplayer_used
+      if not @flowplayer_scripts_included
+        @flowplayer_scripts_included = true
+%>
+        <%= javascript_include_tag 'flowplayer.min.js', :plugin => 'wiki_external_filter' %>
+        <script language="JavaScript">
+	//<![CDATA[
+	  window.onload = function () {
+            flowplayer("a.flowplayer-video", "<%= ActionController::Base.relative_url_root + Engines::RailsExtensions::AssetHelpers.plugin_asset_path('wiki_external_filter', 'javascripts', 'flowplayer.swf') %>", { clip: { bufferLength: 1 } });
+	  };
+	//]]>
+        </script>
+<%
+      end
+    end
+  end
+%>
