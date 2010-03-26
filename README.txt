@@ -20,28 +20,28 @@ ones is typically as easy as adding several lines in plugin config file.
 Installation
 ============
 
-Get sources from [github](http://github.com/ndl/wiki_external_filter).
-
-See [Installing a plugin](http://www.redmine.org/wiki/redmine/Plugins) on
-Redmine site.
-
-Additionally, copy wiki_external_filter.yml from config folder of plugin
-directory to the config folder of your redmine installation.
-
-After installation it's **strongly recommended** to go to plugin settings and
-configure caching. Note that RoR file-based caching suggested by default does
-not implement proper cache expiration: you should either setup a cron task to
-clean cache or do it manually from time to time.
-
-To successfully use macros with complex argument expressions, it's necessary
-to patch core Redmine components as follows:
-
- * [Change MACROS_RE](http://www.redmine.org/issues/3061) regexp not to stop
-   too early - in the issue description textile wiki formatter is mentioned,
-   but in fact this change should be done for whatever wiki formatter you use.
- * [Change arguments parsing](http://www.redmine.org/boards/3/topics/4987#message-9854) - again, should be done for whatever wiki formatter you use.
- * Additionally, for some of the formatters escaping should be avoided for
-   macro arguments.
+1. It's recommended (but not required) to install
+   [popen4](http://popen4.rubyforge.org/) library first as without it plugin is
+   unable to capture stderr output of external command, so it might be hard to debug
+   it if things go wrong.
+2. Get sources from [github](http://github.com/ndl/wiki_external_filter).
+3. See [Installing a plugin](http://www.redmine.org/wiki/redmine/Plugins) on
+   Redmine site.
+4. Copy wiki_external_filter.yml from config folder of plugin
+   directory to the config folder of your redmine installation.
+5. After installation it's **strongly recommended** to go to plugin settings and
+   configure caching. Note that RoR file-based caching suggested by default does
+   not implement proper cache expiration: you should either setup a cron task to
+   clean cache or do it manually from time to time.
+6. To successfully use macros with complex argument expressions, it's necessary
+   to patch wiki engine you use as follows:
+    * [Change MACROS_RE](http://www.redmine.org/issues/3061) regexp not to stop
+      too early - in the issue description textile wiki formatter is mentioned,
+      but in fact this change should be done for whatever wiki formatter you use.
+    * [Change arguments parsing](http://www.redmine.org/boards/3/topics/4987#message-9854) - again,
+      should be done for whatever wiki formatter you use.
+    * Additionally, for some of the formatters escaping should be avoided for
+      macro arguments.
 
 [The patch](http://www.ndl.kiev.ua/downloads/redmine_markdown_extra_formatter_fixes.patch.gz) for redmine_markdown_extra_formatter that does all of these (and
 also additionally fixes code highlighting, although not in very nice way) is
@@ -158,6 +158,7 @@ Splash images for videos are generated automatically from the first frame of the
 Multiple videos per page are supported, player instance is attached to the selected video as in [this example](http://flowplayer.org/demos/installation/multiple-players.html).
 
 Required packages installed:
+
  * ffmpeg
  * RMagick
  * wget - for video_url only.
