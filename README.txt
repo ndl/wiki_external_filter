@@ -9,7 +9,7 @@ Overview
 This plugin allows defining macros that process macro argument using
 external filter program and render its result in Redmine wiki.
 
-For every filter two macros are defined: <macro> and <macro>_include.
+For every filter two macros are defined: &lt;macro&gt; and &lt;macro&gt;_include.
 The first one directly processes its argument using filter, while the
 second one assumes its argument is wiki page name, so it reads that wiki page
 content and processes it using the filter.
@@ -19,6 +19,8 @@ ones is typically as easy as adding several lines in plugin config file.
 
 Installation
 ============
+
+Get sources from [github](http://github.com/ndl/wiki_external_filter).
 
 See [Installing a plugin](http://www.redmine.org/wiki/redmine/Plugins) on
 Redmine site.
@@ -33,12 +35,17 @@ clean cache or do it manually from time to time.
 
 To successfully use macros with complex argument expressions, it's necessary
 to patch core Redmine components as follows:
+
  * [Change MACROS_RE](http://www.redmine.org/issues/3061) regexp not to stop
    too early - in the issue description textile wiki formatter is mentioned,
    but in fact this change should be done for whatever wiki formatter you use.
  * [Change arguments parsing](http://www.redmine.org/boards/3/topics/4987#message-9854) - again, should be done for whatever wiki formatter you use.
  * Additionally, for some of the formatters escaping should be avoided for
    macro arguments.
+
+[The patch](http://www.ndl.kiev.ua/downloads/redmine_markdown_extra_formatter_fixes.patch.gz) for redmine_markdown_extra_formatter that does all of these (and
+also additionally fixes code highlighting, although not in very nice way) is
+attached.
 
 Specific filters installation instructions are below.
 
@@ -58,6 +65,8 @@ wrapper /usr/bin/plantuml, here's its example content:
 Result is rendered as PNG file. SVG support seems to be under development for
 PlantUML but so far looks like it's still unusable.
 
+[Gentoo ebuild](http://www.ndl.kiev.ua/downloads/plantuml-9999.ebuild.tar.gz) is attached.
+
 Example of usage:
 
     {{plantuml(
@@ -76,12 +85,16 @@ Example of usage:
     end
     )}}
 
+Rendered output:
+
+![PlantUML output](http://www.ndl.kiev.ua/downloads/wiki_plantuml_sample.png)
+
 graphviz
 --------
 [Graphviz](http://www.graphviz.org/) is a tool for graph-like structures
 visualization. It's assumed that it can be called as /usr/bin/dot.
 
-Result is rendered as SVG file.
+Result is rendered as SVG image or PNG fallback if SVG is not supported by your browser.
 
 Example of usage:
 
@@ -108,6 +121,10 @@ Example of usage:
     }
     )}}
 
+Rendered output:
+
+![Graphviz output](http://www.ndl.kiev.ua/downloads/wiki_graphviz_sample.png)
+
 ritex
 -----
 
@@ -119,11 +136,31 @@ Both ritex and SVGMath require some patches/wrappers.
 Additionally working installation of xmllint from libxml2 with configured
 MathML catalog is required: for Gentoo use [this ebuild](http://bugs.gentoo.org/194501).
 
+Gentoo ebuilds for [ritex](http://www.ndl.kiev.ua/downloads/ritex-0.3.ebuild.tar.gz) and [svgmath](http://www.ndl.kiev.ua/downloads/svgmath-0.3.3.ebuild.tar.gz) are attached.
+
 Example of usage:
 
     {{ritex(
     G(y) = \left\{\array{ 1 - e^{-\lambda x} & \text{ if } y \geq 0 \\ 0 & \text{ if } y < 0 }\right.
     )}}
+
+Rendered output:
+
+![Ritex output](http://www.ndl.kiev.ua/downloads/wiki_ritex_sample.png)
+
+video and video_url
+-------------------
+
+These macros use [ffmpeg](http://ffmpeg.org) to convert any supported video file to FLV format and display it on wiki using [FlowPlayer](http://www.flowplayer.org) flash player. *video* macro takes file path on server as its input, as well as attachments names from current wiki page, while *video_url* expects full URL to the video to convert & show.
+
+Splash images for videos are generated automatically from the first frame of the video.
+
+Multiple videos per page are supported, player instance is attached to the selected video as in [this example](http://flowplayer.org/demos/installation/multiple-players.html).
+
+Required packages installed:
+ * ffmpeg
+ * RMagick
+ * wget - for video_url only.
 
 fortune
 -------
@@ -139,53 +176,42 @@ Example of usage:
 
     {{fortune}}
 
+Rendered output:
+
+![Fortune output](http://www.ndl.kiev.ua/downloads/wiki_fortune_sample.png)
+
 Writing new macros
 ==================
 
 New macros can easily be added via wiki_external_filter.yml config file.
 
-Wiki external filter uses standard Unix approach for filtering: input is fed
-to the command via stdin and output is read on stdout. If command return
-status is zero, content type is assumed to be of content_type specified in
-config, otherwise it's assumed it's plain error text.
+Every macro may have multiple commands processing the same input - for example for **video** macro two commands are used: first one extracts thumbnail and second one converts the video.
 
-You can use prolog/epilog config parameters to add standard text before/after
+Commands use standard Unix approach for filtering: input is fed
+to the command via stdin and output is read on stdout. If command return
+status is zero, content type is assumed to be of ``content_type`` specified in
+config, otherwise it's assumed to be plain error text together with stderr content.
+
+You can use ``prolog``/``epilog`` config parameters to add standard text before/after
 actual macro content passed to filter.
 
-Additionally, cache_seconds parameter specifies the number of seconds command
-output result should be cached, use zero to disable caching for this
-particular command.
+Additionally, ``cache_seconds`` parameter specifies the number of seconds commands
+output result should be cached, use zero to disable caching for this macro.
+
+The way filter output is visualized is controlled via
+app/views/wiki_external_filter/macro_*.html.erb files. The view to use is selected by  ``template`` macro option in config. The view can use all commands outputs for particular macro.
+
+``replace_attachments`` tells plugin that it should parse the text passed to the macro and replace all occurrences of strings matching attachments names with their physical paths on disk.
 
 Macro argument is de-escaped via CGI.unescapeHTML call prior to being fed to
 filter.
 
-The way filter output is visualized is controlled via
-app/views/wiki_external_filter/macro_*.html.erb files.
-
-By default all 'image/*' content types are rendered as <img>, 'text/plain'
-is included in resulting HTML page with escaping, all '*/*xml*'
-and '*/*html*' content types are included directly into output page without
-escaping, all other content types are embedded as <object>.
-
 Current bugs/issues
 ===================
 
-1. Redmine core requires patching to get things work. In fact, the whole
+1. Either Redmine core (if you use default wiki engine) or your custom wiki engine plugin requires patching to get things work. In fact, the whole
    wiki formatting design as of now seems to be quite messy.
-2. FireFox has broken implementation of SVG rendering: <img> tag for SVG
-   inclusion does not work: see the [related bug](https://bugzilla.mozilla.org/show_bug.cgi?id=276431) dated back to 2004 (sic!).
-   WebKit browsers, on the other hand, are too fragile with <object> SVG
-   embedding, having problems with resulting image size.
-   Considering I do not use FireFox but use WebKit-based browsers - guess
-   which route I've chosen ;-)
-   If you insist on making it work for FireFox (and breaking things for
-   WebKit-based browsers) - copy <object> embedding code in the views
-   templates under the `when /image\/svg\+xml/ then` clause (put it before
-   generic 'image' case).
-   Alternatively, you can use some JavaScript-based trickery to use different
-   embedding ways depending on browser version.
-   Of course, IE does not support SVG at all, but who really uses it these
-   days anyway? ;-)
+2. SVG support is more complex it should have been if all browsers had played by the rules - currently quite some trickery with different XHTML elements/CSS tricks is used to show SVGs properly in major browsers. Of course, there's not that much that can be done for IE as it does not support SVG at all, but now at least the plugin substitutes raster fall-back image for IE if it is available.
 3. For formula support, theoretically ritex alone is sufficient if you have
    MathML-capable browser, however in practice there are too many issues with
    this approach: for example Firefox (actually the onlt MathML-capable

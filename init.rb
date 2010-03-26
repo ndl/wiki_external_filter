@@ -7,7 +7,7 @@ Redmine::Plugin.register :wiki_external_filter do
   author 'Alexander Tsvyashchenko'
   description 'Processes given text using external command and renders its output'
   author_url 'http://www.ndl.kiev.ua'
-  version '0.0.1'
+  version '0.0.2'
   settings :default => {'cache_seconds' => '0'}, :partial => 'wiki_external_filter/settings'
 
   config = WikiExternalFilterHelper.load_config
