@@ -311,7 +311,7 @@ Installation
     * Additionally, for some of the formatters escaping should be avoided for
       macro arguments.
 
-[The patch](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/redmine_markdown_extra_formatter_fixes.patch.gz) for redmine_markdown_extra_formatter that does all of these (and
+[The patch](http://www.ndl.kiev.ua/downloads/redmine_markdown_extra_formatter_fixes.patch.gz) for redmine_markdown_extra_formatter that does all of these (and
 also additionally fixes code highlighting, although not in very nice way) is
 attached.
 
@@ -333,7 +333,7 @@ wrapper /usr/bin/plantuml, here's its example content:
 Result is rendered as PNG file. SVG support seems to be under development for
 PlantUML but so far looks like it's still unusable.
 
-[Gentoo ebuild](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/plantuml-9999.ebuild.tar.gz) is attached.
+[Gentoo ebuild](http://www.ndl.kiev.ua/downloads/plantuml-9999.ebuild.tar.gz) is attached.
 
 Example of usage:
 
@@ -355,7 +355,7 @@ Example of usage:
 
 Rendered output:
 
-![PlantUML output](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/wiki_plantuml_sample.png)
+![PlantUML output](http://www.ndl.kiev.ua/downloads/wiki_plantuml_sample.png)
 
 graphviz
 --------
@@ -391,7 +391,7 @@ Example of usage:
 
 Rendered output:
 
-![Graphviz output](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/wiki_graphviz_sample.png)
+![Graphviz output](http://www.ndl.kiev.ua/downloads/wiki_graphviz_sample.png)
 
 ritex
 -----
@@ -404,7 +404,7 @@ Both ritex and SVGMath require some patches/wrappers.
 Additionally working installation of xmllint from libxml2 with configured
 MathML catalog is required: for Gentoo use [this ebuild](http://bugs.gentoo.org/194501).
 
-Gentoo ebuilds for [ritex](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/ritex-0.3.ebuild.tar.gz) and [svgmath](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/svgmath-0.3.3.ebuild.tar.gz) are attached.
+Gentoo ebuilds for [ritex](http://www.ndl.kiev.ua/downloads/ritex-0.3.ebuild.tar.gz) and [svgmath](http://www.ndl.kiev.ua/downloads/svgmath-0.3.3.ebuild.tar.gz) are attached.
 
 Example of usage:
 
@@ -414,7 +414,7 @@ Example of usage:
 
 Rendered output:
 
-![Ritex output](http://www.ndl.kiev.uahttp://www.ndl.kiev.ua/downloads/wiki_ritex_sample.png)
+![Ritex output](http://www.ndl.kiev.ua/downloads/wiki_ritex_sample.png)
 
 video and video_url
 -------------------
