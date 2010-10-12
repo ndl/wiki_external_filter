@@ -12,7 +12,7 @@
       <script language="JavaScript" type="text/javascript">
       //<![CDATA[
         window.onload = function () {
-          flowplayer("a.flowplayer-video", "<%= ActionController::Base.relative_url_root + Engines::RailsExtensions::AssetHelpers.plugin_asset_path('wiki_external_filter', 'javascripts', 'flowplayer.swf') %>", { clip: { bufferLength: 1 } });
+          flowplayer("a.flowplayer-video", "<%= Engines::RailsExtensions::AssetHelpers.plugin_asset_path('wiki_external_filter', 'javascripts', 'flowplayer.swf') %>", { clip: { bufferLength: 1 } });
         };
       //]]>
       </script>

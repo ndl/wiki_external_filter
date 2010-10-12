@@ -40,19 +40,27 @@ module WikiExternalFilterHelper
 
     if expires > 0
       cache_key = self.construct_cache_key(macro, name)
-      content = read_fragment cache_key, :expires_in => expires.seconds
+      begin
+        content = read_fragment cache_key, :expires_in => expires.seconds
+      rescue
+        RAILS_DEFAULT_LOGGER.error "Failed to load cache: #{cache_key}, error: $!"
+      end
     end
 
     if content
       result[:source] = text
       result[:content] = content
-      RAILS_DEFAULT_LOGGER.debug "from cache: #{name}"
+      RAILS_DEFAULT_LOGGER.debug "from cache: #{cache_key}"
     else
       result = self.build_forced(text, attachments, info)
       if result[:status]
         if expires > 0
-          write_fragment cache_key, result[:content], :expires_in => expires.seconds
-	  RAILS_DEFAULT_LOGGER.debug "cache saved: #{name}"
+          begin
+            write_fragment cache_key, result[:content], :expires_in => expires.seconds
+            RAILS_DEFAULT_LOGGER.debug "cache saved: #{cache_key}"
+          rescue
+            RAILS_DEFAULT_LOGGER.error "Failed to save cache: #{cache_key}, error: $!"
+	  end
 	end
       else
         raise "Error applying external filter: stdout is #{result[:content]}, stderr is #{result[:errors]}"
