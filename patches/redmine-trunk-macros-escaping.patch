@@ -1,0 +1,93 @@
+Index: lib/redmine/wiki_formatting.rb
+===================================================================
+--- lib/redmine/wiki_formatting.rb	(revision 7639)
++++ lib/redmine/wiki_formatting.rb	(working copy)
+@@ -15,6 +15,8 @@
+ # along with this program; if not, write to the Free Software
+ # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ 
++require 'digest/md5'
++
+ module Redmine
+   module WikiFormatting
+     @@formatters = {}
+@@ -44,21 +46,30 @@
+       end
+ 
+       def to_html(format, text, options = {}, &block)
+-        text = if Setting.cache_formatted_text? && text.size > 2.kilobyte && cache_store && cache_key = cache_key_for(format, options[:object], options[:attribute])
+-          # Text retrieved from the cache store may be frozen
+-          # We need to dup it so we can do in-place substitutions with gsub!
++        text, macros_grabbed = if Setting.cache_formatted_text? && text.size > 2.kilobyte && cache_store && cache_key = cache_key_for(format, options[:object], options[:attribute])
+           cache_store.fetch cache_key do
+-            formatter_for(format).new(text).to_html
+-          end.dup
++            format_text(format, text)
++          end
+         else
+-          formatter_for(format).new(text).to_html
++          format_text(format, text)
+         end
++
++        # Text retrieved from the cache store may be frozen
++        # We need to dup it so we can do in-place substitutions with gsub!
++	text = text.dup
++
+         if block_given?
+-          execute_macros(text, block)
++          execute_macros(text, macros_grabbed, block)
+         end
+         text
+       end
+ 
++      def format_text(format, text)
++	text, macros_grabbed = preprocess_macros(text)
++	formatter = formatter_for(format).new(text)
++	[formatter.to_html, macros_grabbed]
++      end
++
+       # Returns a cache key for the given text +format+, +object+ and +attribute+ or nil if no caching should be done
+       def cache_key_for(format, object, attribute)
+         if object && attribute && !object.new_record? && object.respond_to?(:updated_on) && !format.blank?
+@@ -76,16 +87,38 @@
+                     (
+                     \{\{                        # opening tag
+                     ([\w]+)                     # macro name
+-                    (\(([^\}]*)\))?             # optional arguments
++                    (\((.*?)\))?                # optional arguments
+                     \}\}                        # closing tag
+                     )
+-                  /x unless const_defined?(:MACROS_RE)
++                  /xm unless const_defined?(:MACROS_RE)
+ 
+       # Macros substitution
+-      def execute_macros(text, macros_runner)
++
++      # Extract and store raw text for wiki_external_filter macro
++      # to avoid it being processed by the wiki engine
++      def preprocess_macros(text)
++        macros_grabbed = {}
++        text = text.gsub(MACROS_RE) do |s|
++          esc, all, macro = $1, $2, $3.downcase
++          if esc.nil? and (WikiExternalFilterHelper.has_macro macro rescue false)
++            args = $5
++            key = Digest::MD5.hexdigest("#{macro}:#{args}")
++            macros_grabbed[key] = {:macro => macro, :args => args}
++            "{{_macros_grabbed(#{key})}}"
++          else
++            s
++          end
++        end
++        [text, macros_grabbed]
++      end
++
++      def execute_macros(text, macros_grabbed, macros_runner)
+         text.gsub!(MACROS_RE) do
+           esc, all, macro = $1, $2, $3.downcase
+           args = ($5 || '').split(',').each(&:strip)
++          if macro == '_macros_grabbed' and macros_grabbed.member? args.first
++            macro, args = macros_grabbed[args.first].values_at(:macro, :args)
++          end
+           if esc.nil?
+             begin
+               macros_runner.call(macro, args)
